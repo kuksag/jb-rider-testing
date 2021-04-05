@@ -8,16 +8,26 @@
 #include <unordered_set>
 #include <vector>
 
-int main() {
-    const char FILE_PATH[] = "words.txt";
+int main(int argc, char *argv[]) {
+    // --------------------------------------------------------------------
+    // extracting command line arguments
+
+    std::string FILE_PATH = "words.txt";
     const std::size_t ALPHABET_SIZE = 'z' - 'a' + 1;
-    const std::size_t BOUND = 15;
+    std::size_t BOUND = 30;
+
+    if (argc > 1) {
+        if (argc != 3) throw std::runtime_error("Expected 0 or 2 arguments, got " + std::to_string(argc));
+        char *number_end;
+        BOUND = static_cast<std::size_t>(std::strtol(argv[1], &number_end, 10));
+        FILE_PATH = argv[2];
+    }
 
     // --------------------------------------------------------------------
     // extracting words from dictionary
 
     std::ifstream file(FILE_PATH, std::ifstream::in);
-    assert(file.good());
+    if (!file.good()) throw std::runtime_error("Couldn't open file: " + FILE_PATH);
 
     std::vector<std::string> dictionary;
     std::vector<std::size_t> bundle[ALPHABET_SIZE][ALPHABET_SIZE]
@@ -54,6 +64,7 @@ int main() {
 
     // --------------------------------------------------------------------
     // event loop
+
     std::string current_word;
     while (true) {
         mvwaddstr(window, 0, 0, ("Current word: " + (current_word.empty() ? "---" : current_word)).c_str());
