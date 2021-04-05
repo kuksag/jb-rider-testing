@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 project(jetbrains_unreal_editor)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -19,4 +19,10 @@ else()
     endif (UNIX AND NOT CMAKE_CXX_FLAGS)
 endif (MSVC)
 
+
+find_package(Curses REQUIRED)
+
 add_executable(jetbrains_unreal_editor main.cpp)
+
+target_include_directories(jetbrains_unreal_editor PUBLIC ${CURSES_INCLUDE_DIR})
+target_link_libraries(jetbrains_unreal_editor ${CURSES_LIBRARIES})
