@@ -13,8 +13,8 @@ int main(int argc, char *argv[]) {
     // extracting command line arguments
 
     std::string FILE_PATH = "words.txt";
-    const std::size_t ALPHABET_SIZE = 'z' - 'a' + 1;
-    std::size_t BOUND = 30;
+    const std::size_t ALPHABET_SIZE = 'z' - 'A' + 1;
+    std::size_t BOUND = 150;
 
     if (argc > 1) {
         if (argc != 3) throw std::runtime_error("Expected 0 or 2 arguments, got " + std::to_string(argc));
@@ -34,13 +34,13 @@ int main(int argc, char *argv[]) {
                                    [ALPHABET_SIZE];
 
     for (std::string word; file >> word;) {
-        auto check_letter = [](char ch) { return 'a' <= ch && ch <= 'z'; };
+        auto check_letter = [](char ch) { return 'A' <= ch && ch <= 'z'; };
         for (std::size_t i = 0; i + 1 < word.size(); i++) {
             if (check_letter(word[i]) && check_letter(word[i + 1])) {
                 if (i + 2 < word.size() && check_letter(word[i + 2])) {
-                    bundle[word[i] - 'a'][word[i + 1] - 'a'][word[i + 2] - 'a'].push_back(dictionary.size());
+                    bundle[word[i] - 'A'][word[i + 1] - 'A'][word[i + 2] - 'A'].push_back(dictionary.size());
                 } else {
-                    bundle[word[i] - 'a'][word[i + 1] - 'a'][0].push_back(dictionary.size());
+                    bundle[word[i] - 'A'][word[i + 1] - 'A'][0].push_back(dictionary.size());
                 }
             }
         }
@@ -88,21 +88,21 @@ int main(int argc, char *argv[]) {
         if (current_word.size() <= 1) {
             init_letter_range(second_letter_range);
         } else {
-            second_letter_range.push_back(current_word[1] - 'a');
+            second_letter_range.push_back(current_word[1] - 'A');
         }
 
         std::vector<std::size_t> third_letter_range;
         if (current_word.size() <= 2) {
             init_letter_range(third_letter_range);
         } else {
-            third_letter_range.push_back(current_word[2] - 'a');
+            third_letter_range.push_back(current_word[2] - 'A');
         }
 
         std::size_t counter = 0;
         for (std::size_t i : second_letter_range) {
             for (std::size_t j : third_letter_range) {
                 for (std::size_t id :
-                     bundle[current_word[0] - 'a'][i][j]) {
+                     bundle[current_word[0] - 'A'][i][j]) {
                     if (dictionary[id].find(current_word) == std::string::npos) continue;
                     if (counter >= BOUND) break;
                     counter++;
