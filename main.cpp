@@ -1,4 +1,3 @@
-#include "ncurses.h"
 #include <cassert>
 #include <chrono>
 #include <fstream>
@@ -8,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ncurses.h"
 
 // --------------------------------------------------------------------
 // Ncurses constants
@@ -21,17 +21,22 @@ const std::size_t CURRENT_WORD_LINE = REQUEST_TIME_LINE + 1;
 const std::size_t MATCHES_LINE = CURRENT_WORD_LINE + 1;
 // --------------------------------------------------------------------
 
-
-void dictionary_init(const std::string &file_path, std::vector<std::string> &dictionary) {
+void dictionary_init(const std::string &file_path,
+                     std::vector<std::string> &dictionary) {
     std::ifstream file(file_path, std::ifstream::in);
-    if (!file.good()) throw std::runtime_error("Couldn't open file: " + file_path);
+    if (!file.good())
+        throw std::runtime_error("Couldn't open file: " + file_path);
 
-    for (std::string word; file >> word;)
-        dictionary.push_back(std::move(word));
+    for (std::string word; file >> word;) dictionary.push_back(std::move(word));
 }
 
 struct SubstringSearch {
-    std::unordered_map<std::size_t, std::unordered_map<std::size_t, std::unordered_map<std::size_t, std::vector<std::size_t>>>> bundle;
+    std::unordered_map<
+        std::size_t,
+        std::unordered_map<
+            std::size_t,
+            std::unordered_map<std::size_t, std::vector<std::size_t>>>>
+        bundle;
     std::vector<std::size_t> matches;
 
     explicit SubstringSearch(const std::vector<std::string> &dictionary) {
@@ -39,7 +44,8 @@ struct SubstringSearch {
             const std::string &word = dictionary[i];
             for (std::size_t j = 0; j + 1 < word.size(); j++) {
                 if (j + 2 < word.size()) {
-                    bundle[word[j] - 'A'][word[j + 1] - 'A'][word[j + 2] - 'A'].push_back(i);
+                    bundle[word[j] - 'A'][word[j + 1] - 'A'][word[j + 2] - 'A']
+                        .push_back(i);
                 } else {
                     bundle[word[j] - 'A'][word[j + 1] - 'A'][0].push_back(i);
                 }
@@ -47,7 +53,8 @@ struct SubstringSearch {
         }
     }
 
-    void search(const std::string &current_word, const std::vector<std::string> &dictionary) {
+    void search(const std::string &current_word,
+                const std::vector<std::string> &dictionary) {
         auto init_letter_range = [](std::vector<std::size_t> &range) {
             for (std::size_t i = 0; i < (1 << 8); i++) range.push_back(i);
         };
@@ -70,7 +77,8 @@ struct SubstringSearch {
         for (std::size_t i : second_letter_range) {
             for (std::size_t j : third_letter_range) {
                 for (std::size_t id : bundle[current_word[0] - 'A'][i][j]) {
-                    if (dictionary[id].find(current_word) == std::string::npos) continue;
+                    if (dictionary[id].find(current_word) == std::string::npos)
+                        continue;
                     matches.push_back(id);
                 }
             }
@@ -78,8 +86,11 @@ struct SubstringSearch {
     }
 };
 
-void print(WINDOW *&window, const std::vector<std::size_t> &matches, const std::vector<std::string> &dictionary, std::size_t show_range, const std::string &current_word) {
-    for (std::size_t i = show_range; i < std::min(matches.size(), show_range + WINDOW_HEIGHT); i++) {
+void print(WINDOW *&window, const std::vector<std::size_t> &matches,
+           const std::vector<std::string> &dictionary, std::size_t show_range,
+           const std::string &current_word) {
+    for (std::size_t i = show_range;
+         i < std::min(matches.size(), show_range + WINDOW_HEIGHT); i++) {
         std::string line = std::to_string(i) + ". " + dictionary[matches[i]];
         std::size_t pos = line.find(current_word);
         for (std::size_t j = 0; j < line.size(); j++) {
@@ -90,15 +101,19 @@ void print(WINDOW *&window, const std::vector<std::size_t> &matches, const std::
     }
 }
 
-
 // --------------------------------------------------------------------
 // This is for time measurement
 
-int calculate_time(const std::chrono::time_point<std::chrono::high_resolution_clock> &start) {
-    return static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1e4);
+int calculate_time(
+    const std::chrono::time_point<std::chrono::high_resolution_clock> &start) {
+    return static_cast<int>(
+        static_cast<double>(
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::high_resolution_clock::now() - start)
+                .count()) /
+        1e4);
 }
 // --------------------------------------------------------------------
-
 
 int main() {
     auto program_start_time = std::chrono::high_resolution_clock::now();
@@ -134,15 +149,23 @@ int main() {
     std::size_t show_range = 0;
     int request_duration = 0;
     while (true) {
-        mvwaddstr(window, PROGRAM_TIME_LINE, 0, ("Dictionary initialized in: 0." + std::to_string(init_duration) + "s").c_str());
-        mvwaddstr(window, REQUEST_TIME_LINE, 0, ("Request done in: 0." + std::to_string(request_duration) + "s").c_str());
-        mvwaddstr(window, CURRENT_WORD_LINE, 0, ("Current word > " + (current_word.empty() ? "[Press any letter]" : current_word)).c_str());
+        mvwaddstr(window, PROGRAM_TIME_LINE, 0,
+                  ("Dictionary initialized in: 0." +
+                   std::to_string(init_duration) + "s")
+                      .c_str());
+        mvwaddstr(
+            window, REQUEST_TIME_LINE, 0,
+            ("Request done in: 0." + std::to_string(request_duration) + "s")
+                .c_str());
+        mvwaddstr(window, CURRENT_WORD_LINE, 0,
+                  ("Current word > " +
+                   (current_word.empty() ? "[Press any letter]" : current_word))
+                      .c_str());
 
         int pressed_key = wgetch(window);
         if (pressed_key == 27 /* KEY_ESCAPE */) break;
         wclear(window);
         wrefresh(window);
-
 
         if (pressed_key == KEY_BACKSPACE) {
             if (!current_word.empty()) current_word.pop_back();
@@ -162,7 +185,8 @@ int main() {
             substring_search.search(current_word, dictionary);
             request_duration = calculate_time(start);
         }
-        print(window, substring_search.matches, dictionary, show_range, current_word);
+        print(window, substring_search.matches, dictionary, show_range,
+              current_word);
     }
 
     endwin();
