@@ -78,7 +78,9 @@ int main(int argc, char *argv[]) {
         if (pressed_key == KEY_BACKSPACE) {
             if (!current_word.empty()) current_word.pop_back();
         } else {
-            current_word.push_back(char(pressed_key));
+            if (('a' <= pressed_key && pressed_key <= 'z') ||
+                ('A' <= pressed_key && pressed_key <= 'Z'))
+                current_word.push_back(char(pressed_key));
         }
 
         if (current_word.empty()) continue;
