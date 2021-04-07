@@ -5,8 +5,8 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 
 // --------------------------------------------------------------------
@@ -78,9 +78,16 @@ struct SubstringSearch {
     }
 };
 
-void print(WINDOW *&window, const std::vector<std::size_t> &matches, const std::vector<std::string> &dictionary, std::size_t from) {
-    for (std::size_t i = from; i < std::min(matches.size(), from + WINDOW_HEIGHT); i++)
-        mvwaddstr(window, MATCHES_LINE + i - from, 0, (std::to_string(i) + ". " + dictionary[matches[i]]).c_str());
+void print(WINDOW *&window, const std::vector<std::size_t> &matches, const std::vector<std::string> &dictionary, std::size_t show_range, const std::string &current_word) {
+    for (std::size_t i = show_range; i < std::min(matches.size(), show_range + WINDOW_HEIGHT); i++) {
+        std::string line = std::to_string(i) + ". " + dictionary[matches[i]];
+        std::size_t pos = line.find(current_word);
+        for (std::size_t j = 0; j < line.size(); j++) {
+            if (j == pos) wattron(window, A_BOLD);
+            mvwaddch(window, MATCHES_LINE + i - show_range, j, line[j]);
+            if (j + 1 == pos + current_word.size()) wattroff(window, A_BOLD);
+        }
+    }
 }
 
 
@@ -155,7 +162,7 @@ int main() {
             substring_search.search(current_word, dictionary);
             request_duration = calculate_time(start);
         }
-        print(window, substring_search.matches, dictionary, show_range);
+        print(window, substring_search.matches, dictionary, show_range, current_word);
     }
 
     endwin();
