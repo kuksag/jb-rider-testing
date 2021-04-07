@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 const std::size_t ALPHABET_SIZE = 'z' - 'A' + 1;
 
@@ -17,11 +18,6 @@ const std::size_t REQUEST_TIME_LINE = PROGRAM_TIME_LINE + 1;
 const std::size_t CURRENT_WORD_LINE = REQUEST_TIME_LINE + 1;
 const std::size_t MATCHES_LINE = CURRENT_WORD_LINE + 1;
 
-bool check_letter(char ch) { return ('A' <= ch && ch <= 'Z') ||
-                                    ('a' <= ch && ch <= 'z') ||
-                                    ('0' <= ch && ch <= '9') ||
-                                    ch == '-'; };
-
 void dictionary_init(const std::string &file_path, std::vector<std::string> &dictionary) {
     std::ifstream file(file_path, std::ifstream::in);
     if (!file.good()) throw std::runtime_error("Couldn't open file: " + file_path);
@@ -31,19 +27,18 @@ void dictionary_init(const std::string &file_path, std::vector<std::string> &dic
 }
 
 struct SubstringSearch {
+//    std::vector<std::size_t> bundle[ALPHABET_SIZE][ALPHABET_SIZE][ALPHABET_SIZE];
+    std::unordered_map<std::size_t, std::unordered_map<std::size_t, std::unordered_map<std::size_t, std::vector<std::size_t>>>> bundle;
     std::vector<std::size_t> matches;
-    std::vector<std::size_t> bundle[ALPHABET_SIZE][ALPHABET_SIZE][ALPHABET_SIZE];
 
     explicit SubstringSearch(const std::vector<std::string> &dictionary) {
         for (std::size_t i = 0; i < dictionary.size(); i++) {
             const std::string &word = dictionary[i];
             for (std::size_t j = 0; j + 1 < word.size(); j++) {
-                if (check_letter(word[j]) && check_letter(word[j + 1])) {
-                    if (j + 2 < word.size() && check_letter(word[j + 2])) {
-                        bundle[word[j] - 'A'][word[j + 1] - 'A'][word[j + 2] - 'A'].push_back(i);
-                    } else {
-                        bundle[word[j] - 'A'][word[j + 1] - 'A'][0].push_back(i);
-                    }
+                if (j + 2 < word.size()) {
+                    bundle[word[j] - 'A'][word[j + 1] - 'A'][word[j + 2] - 'A'].push_back(i);
+                } else {
+                    bundle[word[j] - 'A'][word[j + 1] - 'A'][0].push_back(i);
                 }
             }
         }
@@ -142,12 +137,10 @@ int main() {
             show_range++;
         } else {
             show_range = 0;
-            if (check_letter(static_cast<char>(pressed_key))) {
-                current_word.push_back(char(pressed_key));
-                auto start = std::chrono::high_resolution_clock::now();
-                substring_search.search(current_word, dictionary);
-                request_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1e2);
-            }
+            current_word.push_back(char(pressed_key));
+            auto start = std::chrono::high_resolution_clock::now();
+            substring_search.search(current_word, dictionary);
+            request_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1e2);
         }
         print(window, substring_search.matches, dictionary, show_range);
     }
