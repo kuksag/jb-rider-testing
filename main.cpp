@@ -8,6 +8,78 @@
 #include <unordered_set>
 #include <vector>
 
+const std::size_t ALPHABET_SIZE = 'z' - 'A' + 1;
+
+const std::size_t WINDOW_HEIGHT = 80;
+const std::size_t WINDOW_WIDTH = 43;
+
+const std::size_t PROGRAM_TIME_LINE = 0;
+const std::size_t CURRENT_WORD_LINE = PROGRAM_TIME_LINE + 1;
+const std::size_t MATCHES_LINE = CURRENT_WORD_LINE + 1;
+
+void dictionary_init(const std::string &file_path, std::vector<std::string> &dictionary) {
+    std::ifstream file(file_path, std::ifstream::in);
+    if (!file.good()) throw std::runtime_error("Couldn't open file: " + file_path);
+
+    for (std::string word; file >> word;)
+        dictionary.push_back(std::move(word));
+}
+
+struct SubstringSearch {
+    std::vector<std::size_t> matches;
+    std::vector<std::size_t> bundle[ALPHABET_SIZE][ALPHABET_SIZE][ALPHABET_SIZE];
+
+    explicit SubstringSearch(const std::vector<std::string> &dictionary) {
+        for (std::size_t i = 0; i < dictionary.size(); i++) {
+            const std::string &word = dictionary[i];
+            auto check_letter = [](char ch) { return ('A' <= ch && ch <= 'Z') ||
+                                                     ('a' <= ch && ch <= 'z') ||
+                                                     ('0' <= ch && ch <= '9') ||
+                                                     ch == '-'; };
+            for (std::size_t j = 0; j + 1 < word.size(); j++) {
+                if (check_letter(word[j]) && check_letter(word[j + 1])) {
+                    if (j + 2 < word.size() && check_letter(word[j + 2])) {
+                        bundle[word[j] - 'A'][word[j + 1] - 'A'][word[j + 2] - 'A'].push_back(i);
+                    } else {
+                        bundle[word[j] - 'A'][word[j + 1] - 'A'][0].push_back(i);
+                    }
+                }
+            }
+        }
+    }
+
+    void search(const std::string &current_word, const std::vector<std::string> &dictionary) {
+        auto init_letter_range = [](std::vector<std::size_t> &range) { for (std::size_t i = 0; i < ALPHABET_SIZE; i++) range.push_back(i); };
+        std::vector<std::size_t> second_letter_range;
+        if (current_word.size() <= 1) {
+            init_letter_range(second_letter_range);
+        } else {
+            second_letter_range.push_back(current_word[1] - 'A');
+        }
+
+        std::vector<std::size_t> third_letter_range;
+        if (current_word.size() <= 2) {
+            init_letter_range(third_letter_range);
+        } else {
+            third_letter_range.push_back(current_word[2] - 'A');
+        }
+
+        for (std::size_t i : second_letter_range) {
+            for (std::size_t j : third_letter_range) {
+                for (std::size_t id : bundle[current_word[0] - 'A'][i][j]) {
+                    if (dictionary[id].find(current_word) == std::string::npos) continue;
+                    matches.push_back(id);
+                }
+            }
+        }
+    }
+};
+
+void print(WINDOW *&window, const std::vector<std::size_t> &matches, const std::vector<std::string> &dictionary, std::size_t from) {
+    for (std::size_t i = from; i < std::min(matches.size(), WINDOW_HEIGHT); i++)
+        mvwaddstr(window, MATCHES_LINE + i - from, 0, (std::to_string(i - from) + ". " + dictionary[from]).c_str());
+}
+
 int main(int argc, char *argv[]) {
     auto program_start_time = std::chrono::high_resolution_clock::now();
     // --------------------------------------------------------------------
