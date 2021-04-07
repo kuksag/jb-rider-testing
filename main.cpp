@@ -8,7 +8,9 @@
 #include <vector>
 #include <unordered_map>
 
-const std::size_t ALPHABET_SIZE = 'z' - 'A' + 1;
+
+// --------------------------------------------------------------------
+// Ncurses constants
 
 const std::size_t WINDOW_HEIGHT = 80;
 const std::size_t WINDOW_WIDTH = 43;
@@ -17,6 +19,8 @@ const std::size_t PROGRAM_TIME_LINE = 0;
 const std::size_t REQUEST_TIME_LINE = PROGRAM_TIME_LINE + 1;
 const std::size_t CURRENT_WORD_LINE = REQUEST_TIME_LINE + 1;
 const std::size_t MATCHES_LINE = CURRENT_WORD_LINE + 1;
+// --------------------------------------------------------------------
+
 
 void dictionary_init(const std::string &file_path, std::vector<std::string> &dictionary) {
     std::ifstream file(file_path, std::ifstream::in);
@@ -27,7 +31,6 @@ void dictionary_init(const std::string &file_path, std::vector<std::string> &dic
 }
 
 struct SubstringSearch {
-//    std::vector<std::size_t> bundle[ALPHABET_SIZE][ALPHABET_SIZE][ALPHABET_SIZE];
     std::unordered_map<std::size_t, std::unordered_map<std::size_t, std::unordered_map<std::size_t, std::vector<std::size_t>>>> bundle;
     std::vector<std::size_t> matches;
 
@@ -46,7 +49,7 @@ struct SubstringSearch {
 
     void search(const std::string &current_word, const std::vector<std::string> &dictionary) {
         auto init_letter_range = [](std::vector<std::size_t> &range) {
-            for (std::size_t i = 0; i < ALPHABET_SIZE; i++) range.push_back(i);
+            for (std::size_t i = 0; i < (1 << 8); i++) range.push_back(i);
         };
         std::vector<std::size_t> second_letter_range;
 
@@ -80,6 +83,16 @@ void print(WINDOW *&window, const std::vector<std::size_t> &matches, const std::
         mvwaddstr(window, MATCHES_LINE + i - from, 0, (std::to_string(i) + ". " + dictionary[matches[i]]).c_str());
 }
 
+
+// --------------------------------------------------------------------
+// This is for time measurement
+
+int calculate_time(const std::chrono::time_point<std::chrono::high_resolution_clock> &start) {
+    return static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1e4);
+}
+// --------------------------------------------------------------------
+
+
 int main() {
     auto program_start_time = std::chrono::high_resolution_clock::now();
     // --------------------------------------------------------------------
@@ -109,7 +122,7 @@ int main() {
     // --------------------------------------------------------------------
     // Event loop
 
-    int init_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - program_start_time).count() / 1e4);
+    int init_duration = calculate_time(program_start_time);
     std::string current_word;
     std::size_t show_range = 0;
     int request_duration = 0;
@@ -127,20 +140,20 @@ int main() {
         if (pressed_key == KEY_BACKSPACE) {
             if (!current_word.empty()) current_word.pop_back();
             if (current_word.empty()) continue;
+            show_range = 0;
             auto start = std::chrono::high_resolution_clock::now();
             substring_search.search(current_word, dictionary);
-            request_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1e4);
-            show_range = 0;
+            request_duration = calculate_time(start);
         } else if (pressed_key == KEY_UP) {
             if (show_range != 0) show_range--;
         } else if (pressed_key == KEY_DOWN) {
             show_range++;
         } else {
-            show_range = 0;
             current_word.push_back(char(pressed_key));
+            show_range = 0;
             auto start = std::chrono::high_resolution_clock::now();
             substring_search.search(current_word, dictionary);
-            request_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1e2);
+            request_duration = calculate_time(start);
         }
         print(window, substring_search.matches, dictionary, show_range);
     }
