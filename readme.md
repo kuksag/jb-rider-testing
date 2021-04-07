@@ -1,11 +1,11 @@
-#Testing project for JetBrains Internship: Unreal Editor
+# Testing project for JetBrains Internship: Unreal Editor
 
 This is a testing task for JetBrains Developer Internship 2021: Unreal Editor project.
 
 The task is to develop a fast dictionary search. [The dictionary](https://raw.githubusercontent.com/dwyl/english-words/master/words.txt)
 that was used for testing. 
 
-##Dependencies
+## Dependencies
 1. Make, C++
 
     `sudo apt-get install build-essential`
