@@ -73,6 +73,7 @@ int main(int argc, char *argv[]) {
 
     int init_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - program_start_time).count() / 1e4);
     std::string current_word;
+    std::size_t show_range = 0;
     while (true) {
         mvwaddstr(window, PROGRAM_TIME_LINE, 0, ("Dictionary initialized in: 0." + std::to_string(init_duration) + "s").c_str());
         mvwaddstr(window, CURRENT_WORD_LINE, 0, ("Current word > " + (current_word.empty() ? "[Press any letter]" : current_word)).c_str());
@@ -85,6 +86,10 @@ int main(int argc, char *argv[]) {
 
         if (pressed_key == KEY_BACKSPACE) {
             if (!current_word.empty()) current_word.pop_back();
+        } else if (pressed_key == KEY_UP) {
+            if (show_range != BOUND) show_range++;
+        } else if (pressed_key == KEY_DOWN) {
+            if (show_range != 0) show_range--;
         } else {
             if (('a' <= pressed_key && pressed_key <= 'z') ||
                 ('A' <= pressed_key && pressed_key <= 'Z'))
@@ -115,7 +120,8 @@ int main(int argc, char *argv[]) {
                      bundle[current_word[0] - 'A'][i][j]) {
                     if (dictionary[id].find(current_word) == std::string::npos) continue;
                     if (counter >= BOUND) break;
-                    mvwaddstr(window, MATCHES_LINE + counter, 0, (std::to_string(counter) + ". " + dictionary[id]).c_str());
+                    if (show_range <= counter && counter <= show_range + BOUND)
+                        mvwaddstr(window, MATCHES_LINE + counter - show_range, 0, (std::to_string(counter) + ". " + dictionary[id]).c_str());
                     counter++;
                 }
             }
