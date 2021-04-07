@@ -9,8 +9,9 @@
 #include <vector>
 
 int main(int argc, char *argv[]) {
+    auto program_start_time = std::chrono::high_resolution_clock::now();
     // --------------------------------------------------------------------
-    // extracting command line arguments
+    // Extracting command line arguments
 
     std::string FILE_PATH = "words.txt";
     const std::size_t ALPHABET_SIZE = 'z' - 'A' + 1;
@@ -24,7 +25,7 @@ int main(int argc, char *argv[]) {
     }
 
     // --------------------------------------------------------------------
-    // extracting words from dictionary
+    // Extracting words from dictionary
 
     std::ifstream file(FILE_PATH, std::ifstream::in);
     if (!file.good()) throw std::runtime_error("Couldn't open file: " + FILE_PATH);
@@ -46,8 +47,9 @@ int main(int argc, char *argv[]) {
         }
         dictionary.emplace_back(std::move(word));
     }
+
     // --------------------------------------------------------------------
-    // initializing ncurses environment
+    // Initializing ncurses environment
 
     const std::size_t WINDOW_HEIGHT = 80;
     const std::size_t WINDOW_WIDTH = 43;
@@ -62,12 +64,18 @@ int main(int argc, char *argv[]) {
     WINDOW *window = newwin(WINDOW_HEIGHT, WINDOW_WIDTH, 0, 0);
     keypad(window, true);
 
-    // --------------------------------------------------------------------
-    // event loop
+    const std::size_t PROGRAM_TIME_LINE = 0;
+    const std::size_t CURRENT_WORD_LINE = PROGRAM_TIME_LINE + 1;
+    const std::size_t MATCHES_LINE = CURRENT_WORD_LINE + 1;
 
+    // --------------------------------------------------------------------
+    // Event loop
+
+    int init_duration = static_cast<int>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - program_start_time).count() / 1e4);
     std::string current_word;
     while (true) {
-        mvwaddstr(window, 0, 0, ("Current word: " + (current_word.empty() ? "---" : current_word)).c_str());
+        mvwaddstr(window, PROGRAM_TIME_LINE, 0, ("Dictionary initialized in: 0." + std::to_string(init_duration) + "s").c_str());
+        mvwaddstr(window, CURRENT_WORD_LINE, 0, ("Current word > " + (current_word.empty() ? "[Press any letter]" : current_word)).c_str());
 
         int pressed_key = wgetch(window);
         if (pressed_key == 27 /* KEY_ESCAPE */) break;
@@ -107,9 +115,8 @@ int main(int argc, char *argv[]) {
                      bundle[current_word[0] - 'A'][i][j]) {
                     if (dictionary[id].find(current_word) == std::string::npos) continue;
                     if (counter >= BOUND) break;
+                    mvwaddstr(window, MATCHES_LINE + counter, 0, (std::to_string(counter) + ". " + dictionary[id]).c_str());
                     counter++;
-
-                    mvwaddstr(window, counter, 0, (std::to_string(counter) + ". " + dictionary[id]).c_str());
                 }
             }
         }
