@@ -1,4 +1,4 @@
-# Testing project for JetBrains Internship: Unreal Editor
+# Testing project for JetBrains Internship: Rider (Unreal Editor)
 
 This is a testing task for JetBrains Developer Internship 2021: Unreal Editor project.
 
@@ -16,7 +16,7 @@ that was used for testing.
 
     `sudo apt-get install libncurses5-dev libncursesw5-dev`
 
-##Build & Run
+## Build & Run
 ```
 git clone <repo>
 cmake .
