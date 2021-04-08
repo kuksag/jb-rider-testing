@@ -16,7 +16,7 @@ that was used for testing.
 
     `sudo apt-get install libncurses5-dev libncursesw5-dev`
 
-##Build & Run
+## Build & Run
 ```
 git clone <repo>
 cmake .
