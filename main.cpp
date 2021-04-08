@@ -115,12 +115,18 @@ int calculate_time(
 }
 // --------------------------------------------------------------------
 
-int main() {
+int main(int argc, char *argv[]) {
     auto program_start_time = std::chrono::high_resolution_clock::now();
     // --------------------------------------------------------------------
     // Extracting command line arguments
 
     std::string FILE_PATH = "words.txt";
+    if (argc == 2) {
+        FILE_PATH = argv[1];
+    } else if (argc > 2) {
+        throw std::runtime_error("Expected zero or one argument, got: " +
+                                 std::to_string(argc - 1));
+    }
     // --------------------------------------------------------------------
     // Extracting words from dictionary
 
