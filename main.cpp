@@ -43,11 +43,18 @@ struct SubstringSearch {
         for (std::size_t i = 0; i < dictionary.size(); i++) {
             const std::string &word = dictionary[i];
             for (std::size_t j = 0; j + 1 < word.size(); j++) {
+                auto unique_push_back = [](std::vector<std::size_t> &data,
+                                           std::size_t value) {
+                    if (data.empty() || data.back() != value)
+                        data.push_back(value);
+                };
                 if (j + 2 < word.size()) {
-                    bundle[word[j] - 'A'][word[j + 1] - 'A'][word[j + 2] - 'A']
-                        .push_back(i);
+                    unique_push_back(bundle[word[j] - 'A'][word[j + 1] - 'A']
+                                           [word[j + 2] - 'A'],
+                                     i);
                 } else {
-                    bundle[word[j] - 'A'][word[j + 1] - 'A'][0].push_back(i);
+                    unique_push_back(
+                        bundle[word[j] - 'A'][word[j + 1] - 'A'][0], i);
                 }
             }
         }
